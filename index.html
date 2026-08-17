@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>strIVe | Find Your Treatment</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>emailjs.init("40i4fovdKPgWv2tLz");</script>
+<!-- GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9XSS3DKEZ8"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-9XSS3DKEZ8');</script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --choc:#281106;
+  --olive:#7A7A52;
+  --linen:#F7F0E4;
+  --cream:#FFFFFF;
+  --choc-dim:rgba(40,17,6,0.6);
+  --choc-faint:rgba(40,17,6,0.1);
+  --olive-faint:rgba(122,122,82,0.15);
+}
+
+html,body{
+  height:100%;
+  overflow:hidden;
+  font-family:'Jost',sans-serif;
+  background:var(--linen);
+  color:var(--choc);
+}
+
+/* FULL SCREEN QUIZ - no scrollbar */
+#quiz-shell{
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* PROGRESS BAR */
+.progress-bar{
+  height:3px;
+  background:var(--choc-faint);
+  flex-shrink:0;
+}
+.progress-fill{
+  height:100%;
+  background:var(--olive);
+  transition:width 0.4s ease;
+}
+
+/* HEADER */
+.quiz-header{
+  background:var(--choc);
+  padding:1rem 2rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-shrink:0;
+}
+.quiz-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.4rem;
+  font-weight:400;
+  letter-spacing:0.15em;
+  color:var(--linen);
+}
+.quiz-logo span{color:var(--olive);font-style:italic;}
+.quiz-step-label{
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:rgba(247,240,228,0.4);
+}
+
+/* MAIN CONTENT AREA - scrollable internally */
+.quiz-body{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:2rem 1.5rem;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* SCREEN */
+.screen{display:none;width:100%;max-width:680px;animation:fadeUp 0.35s ease;}
+.screen.active{display:flex;flex-direction:column;gap:1.25rem;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+.q-eyebrow{
+  font-size:9px;font-weight:600;letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--olive);
+}
+.q-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(22px,4vw,34px);
+  font-weight:400;
+  color:var(--choc);
+  line-height:1.25;
+}
+.q-title em{font-style:italic;color:var(--olive);}
+.q-sub{
+  font-size:14px;font-weight:300;
+  color:var(--choc-dim);line-height:1.7;
+}
+
+/* OPTIONS */
+.opts{display:flex;flex-direction:column;gap:0.6rem;}
+
+.opt{
+  display:flex;align-items:center;gap:1rem;
+  background:var(--cream);
+  border:1px solid var(--choc-faint);
+  padding:1rem 1.25rem;
+  cursor:pointer;
+  transition:border-color 0.2s,background 0.2s;
+  text-align:left;
+  border-radius:0;
+  width:100%;
+  font-family:'Jost',sans-serif;
+}
+.opt:hover{border-color:var(--olive);background:rgba(122,122,82,0.05);}
+.opt.selected{border-color:var(--olive);background:rgba(122,122,82,0.1);}
+
+.opt-dot{
+  width:18px;height:18px;
+  border:1.5px solid var(--choc-faint);
+  border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color 0.2s;
+}
+.opt.selected .opt-dot{border-color:var(--olive);background:var(--olive);}
+.opt.selected .opt-dot::after{content:'';width:6px;height:6px;background:white;border-radius:50%;}
+
+.opt-square{
+  width:18px;height:18px;
+  border:1.5px solid var(--choc-faint);
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color 0.2s;
+}
+.opt.selected .opt-square{border-color:var(--olive);background:var(--olive);}
+.opt.selected .opt-square::after{content:'✓';color:white;font-size:11px;line-height:1;}
+
+.opt-text{flex:1;}
+.opt-main{display:block;font-size:15px;font-weight:400;color:var(--choc);}
+.opt-sub{display:block;font-size:12px;font-weight:300;color:var(--choc-dim);margin-top:2px;line-height:1.5;}
+
+/* NEXT BUTTON */
+.btn-next{
+  font-family:'Jost',sans-serif;
+  font-size:11px;font-weight:600;
+  letter-spacing:0.2em;text-transform:uppercase;
+  padding:1rem 2rem;
+  background:var(--choc);color:var(--linen);
+  border:none;cursor:pointer;
+  transition:background 0.2s;
+  width:100%;
+  margin-top:0.5rem;
+}
+.btn-next:hover{background:var(--olive);}
+.btn-next:disabled{opacity:0.3;cursor:not-allowed;}
+
+.btn-back{
+  background:none;border:none;
+  font-size:12px;font-weight:400;
+  color:var(--choc-dim);
+  cursor:pointer;letter-spacing:0.08em;
+  padding:0.5rem 0;
+  text-align:left;
+  text-decoration:underline;
+  font-family:'Jost',sans-serif;
+}
+
+/* EMAIL SCREEN */
+.email-wrap{display:flex;flex-direction:column;gap:1rem;}
+.email-input{
+  width:100%;
+  padding:1rem 1.25rem;
+  border:1px solid var(--choc-faint);
+  background:var(--cream);
+  font-family:'Jost',sans-serif;
+  font-size:15px;
+  font-weight:300;
+  color:var(--choc);
+  outline:none;
+}
+.email-input:focus{border-color:var(--olive);}
+.email-note{font-size:11px;font-weight:300;color:var(--choc-dim);line-height:1.6;}
+
+/* RESULT SCREEN */
+.result-wrap{display:flex;flex-direction:column;gap:1.5rem;width:100%;max-width:680px;}
+
+.result-header{
+  background:var(--choc);
+  padding:2rem;
+  text-align:center;
+}
+.result-eyebrow{
+  font-size:9px;font-weight:600;letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--olive);
+  display:block;margin-bottom:0.75rem;
+}
+.result-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(24px,4vw,38px);
+  font-weight:400;color:var(--linen);
+  line-height:1.15;margin-bottom:0.5rem;
+}
+.result-tag{
+  font-size:12px;font-weight:300;
+  font-style:italic;color:var(--olive);
+}
+
+.result-body{background:var(--cream);padding:2rem;}
+
+.result-why-label{
+  font-size:9px;font-weight:600;letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--olive);
+  display:block;margin-bottom:0.75rem;
+}
+.result-why{
+  font-size:14px;font-weight:300;
+  color:var(--choc-dim);line-height:1.85;
+  margin-bottom:1.5rem;
+}
+.result-designed{
+  margin-bottom:1.5rem;
+}
+.result-designed-label{
+  font-size:12px;font-weight:600;
+  letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--choc);margin-bottom:0.5rem;
+}
+.result-designed ul{
+  list-style:none;
+  display:flex;flex-direction:column;gap:0.3rem;
+}
+.result-designed ul li{
+  font-size:13px;font-weight:300;
+  color:var(--choc-dim);padding-left:1rem;
+  position:relative;line-height:1.6;
+}
+.result-designed ul li::before{
+  content:'—';position:absolute;left:0;
+  color:var(--olive);font-size:11px;
+}
+
+.result-price-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-top:1.25rem;
+  border-top:1px solid var(--choc-faint);
+  margin-bottom:1.25rem;
+}
+.result-price{
+  font-family:'Cormorant Garamond',serif;
+  font-size:38px;font-weight:300;color:var(--choc);
+}
+.result-dur{
+  font-size:12px;font-weight:300;color:var(--choc-dim);
+}
+.fee-note{
+  font-size:12px;font-weight:300;
+  color:var(--choc-dim);
+  line-height:1.6;
+  padding:0.75rem 1rem;
+  background:var(--linen);
+  border-left:2px solid var(--olive);
+  margin-bottom:1.25rem;
+}
+
+.result-btn{
+  display:block;text-align:center;
+  font-family:'Jost',sans-serif;
+  font-size:11px;font-weight:600;
+  letter-spacing:0.18em;text-transform:uppercase;
+  padding:1rem 1.5rem;
+  background:var(--choc);color:var(--linen);
+  text-decoration:none;
+  transition:background 0.2s;
+  margin-bottom:0.75rem;
+}
+.result-btn:hover{background:var(--olive);}
+.result-btn.secondary{
+  background:transparent;color:var(--choc);
+  border:1px solid var(--choc-faint);
+}
+.result-btn.secondary:hover{border-color:var(--olive);color:var(--olive);}
+
+/* BOOSTERS */
+.boosters-section{
+  background:var(--linen);
+  padding:1.5rem;
+  border-top:1px solid var(--choc-faint);
+  margin-top:0.5rem;
+}
+.boosters-label{
+  font-size:9px;font-weight:600;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--olive);
+  display:block;margin-bottom:1rem;
+}
+.booster{
+  padding:0.85rem 0;
+  border-bottom:0.5px solid var(--choc-faint);
+}
+.booster:last-child{border-bottom:none;}
+.booster-name{
+  font-size:14px;font-weight:500;color:var(--choc);
+  margin-bottom:0.25rem;
+}
+.booster-price{color:var(--olive);font-weight:300;}
+.booster-desc{
+  font-size:12px;font-weight:300;color:var(--choc-dim);
+  line-height:1.6;
+}
+.booster-note{
+  font-size:10px;font-style:italic;color:var(--choc-dim);
+  margin-top:0.25rem;
+  opacity:0.7;
+}
+
+/* CELLULAR SECTION */
+.cellular-section{
+  background:var(--choc);
+  padding:1.5rem;
+}
+.cellular-label{
+  font-size:9px;font-weight:600;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--olive);
+  display:block;margin-bottom:0.5rem;
+}
+.cellular-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px;font-weight:400;color:var(--linen);
+  margin-bottom:0.5rem;
+}
+.cellular-desc{
+  font-size:12px;font-weight:300;
+  color:rgba(247,240,228,0.6);line-height:1.7;
+  margin-bottom:1rem;
+}
+.cellular-options{display:flex;flex-direction:column;gap:0.5rem;}
+.cellular-opt{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0.75rem 1rem;
+  background:rgba(247,240,228,0.06);
+  border:0.5px solid rgba(247,240,228,0.1);
+  text-decoration:none;
+  transition:background 0.2s;
+}
+.cellular-opt:hover{background:rgba(247,240,228,0.1);}
+.cellular-opt-name{
+  font-size:13px;font-weight:400;color:var(--linen);
+}
+.cellular-opt-price{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:300;color:var(--olive);
+}
+
+/* PACKAGE SECTION */
+.pkg-section{
+  background:var(--linen);
+  border:1px solid var(--choc-faint);
+  padding:1.5rem;
+}
+.pkg-label{
+  font-size:9px;font-weight:600;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--olive);
+  display:block;margin-bottom:1rem;
+}
+.pkg{
+  padding:0.85rem 0;
+  border-bottom:0.5px solid var(--choc-faint);
+}
+.pkg:last-child{border-bottom:none;}
+.pkg-name{font-size:14px;font-weight:500;color:var(--choc);margin-bottom:0.25rem;}
+.pkg-desc{font-size:12px;font-weight:300;color:var(--choc-dim);line-height:1.6;margin-bottom:0.5rem;}
+.pkg-btn{
+  display:inline-block;
+  font-size:9px;font-weight:600;
+  letter-spacing:0.15em;text-transform:uppercase;
+  padding:6px 14px;
+  background:var(--choc);color:var(--linen);
+  text-decoration:none;
+  transition:background 0.2s;
+  font-family:'Jost',sans-serif;
+}
+.pkg-btn:hover{background:var(--olive);}
+
+/* UNSURE / CONSULT */
+.unsure-card{
+  background:var(--cream);
+  border:1px solid var(--choc-faint);
+  padding:2rem;
+  text-align:center;
+}
+.unsure-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:26px;font-weight:400;color:var(--choc);
+  margin-bottom:0.75rem;
+}
+.unsure-text{
+  font-size:13px;font-weight:300;color:var(--choc-dim);
+  line-height:1.8;margin-bottom:1.5rem;
+}
+
+/* RESTART */
+.restart-wrap{text-align:center;margin-top:1rem;}
+.btn-restart{
+  background:none;border:none;
+  font-size:12px;color:var(--choc-dim);
+  cursor:pointer;text-decoration:underline;
+  font-family:'Jost',sans-serif;
+}
+
+/* DISCLAIMER */
+.disclaimer{
+  font-size:10px;font-weight:300;
+  color:var(--choc-dim);line-height:1.7;
+  padding-top:1rem;
+  border-top:1px solid var(--choc-faint);
+  opacity:0.6;
+}
+
+/* GENDER HIDDEN */
+.gender-hidden{display:none;}
+
+/* MOBILE */
+@media(max-width:480px){
+  .quiz-header{padding:0.85rem 1.25rem;}
+  .quiz-body{padding:1.5rem 1rem;}
+  .result-body{padding:1.5rem;}
+  .result-header{padding:1.5rem;}
+}
+</style>
+</head>
+<body>
+
+<div id="quiz-shell">
+  <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+  <div class="quiz-header">
+    <div class="quiz-logo">str<span>IV</span>e</div>
+    <div class="quiz-step-label" id="step-label">Find your treatment</div>
+  </div>
+  <div class="quiz-body" id="quiz-body">
+
+    <!-- Q1: BIOLOGICAL SEX -->
+    <div class="screen active" id="q1">
+      <div class="q-eyebrow">Step 1 of 6</div>
+      <div class="q-title">To help us personalise your results, <em>how do you identify?</em></div>
+      <div class="opts">
+        <button class="opt" onclick="pickSingle(this,'sex','male')">
+          <div class="opt-dot"></div>
+          <div class="opt-text"><span class="opt-main">Male</span></div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'sex','female')">
+          <div class="opt-dot"></div>
+          <div class="opt-text"><span class="opt-main">Female</span></div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'sex','prefer_not')">
+          <div class="opt-dot"></div>
+          <div class="opt-text"><span class="opt-main">Prefer not to say</span></div>
+        </button>
+      </div>
+      <button class="btn-next" id="q1-next" disabled onclick="goTo('q2','q1')">Continue</button>
+    </div>
+
+    <!-- Q2: AGE -->
+    <div class="screen" id="q2">
+      <div class="q-eyebrow">Step 2 of 6</div>
+      <div class="q-title">What is your <em>age range?</em></div>
+      <div class="q-sub">Age influences nutrient absorption, metabolism and hormonal demands — it helps us match you more accurately.</div>
+      <div class="opts">
+        <button class="opt" onclick="pickSingle(this,'age','under30')">
+          <div class="opt-dot"></div>
+          <div class="opt-text"><span class="opt-main">Under 30</span></div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'age','30to45')">
+          <div class="opt-dot"></div>
+          <div class="opt-text"><span class="opt-main">30 to 45</span></div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'age','45to60')">
+          <div class="opt-dot"></div>
+          <div class="opt-text"><span class="opt-main">45 to 60</span></div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'age','over60')">
+          <div class="opt-dot"></div>
+          <div class="opt-text"><span class="opt-main">Over 60</span></div>
+        </button>
+      </div>
+      <button class="btn-next" id="q2-next" disabled onclick="goTo('q3','q2')">Continue</button>
+      <button class="btn-back" onclick="goTo('q1','q2')">← Back</button>
+    </div>
+
+    <!-- Q3: PRIMARY GOAL -->
+    <div class="screen" id="q3">
+      <div class="q-eyebrow">Step 3 of 6</div>
+      <div class="q-title">What is your <em>primary goal</em> today?</div>
+      <div class="q-sub">Choose the one that resonates most. We will use this as your anchor.</div>
+      <div class="opts">
+        <button class="opt" onclick="pickSingle(this,'goal','energy')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Energy and vitality</span>
+            <span class="opt-sub">Feeling flat, fatigued or running on empty.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','calm')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Calm and restoration</span>
+            <span class="opt-sub">Stress, burnout, overwhelm or poor sleep.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','hydration')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Hydration and replenishment</span>
+            <span class="opt-sub">After travel, illness, heat or a demanding period.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','immunity')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Immune support</span>
+            <span class="opt-sub">Fighting something off, recovering, or preparing for a busy season.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','beauty')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Skin, hair and beauty</span>
+            <span class="opt-sub">Nourishing from within for radiance, clarity and glow.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','performance')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Performance and recovery</span>
+            <span class="opt-sub">Athletic, gym or physically demanding lifestyle.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','hormonal')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Hormonal and nutritional balance</span>
+            <span class="opt-sub">Perimenopause, menopause, postnatal or hormonal shifts.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','foundation')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">General nutritional foundation</span>
+            <span class="opt-sub">I want broad support rather than a specific goal.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'goal','cellular')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Advanced cellular support</span>
+            <span class="opt-sub">I am interested in cellular longevity and advanced therapy options.</span>
+          </div>
+        </button>
+      </div>
+      <button class="btn-next" id="q3-next" disabled onclick="goTo('q4','q3')">Continue</button>
+      <button class="btn-back" onclick="goTo('q2','q3')">← Back</button>
+    </div>
+
+    <!-- Q4: HOW YOU FEEL NOW -->
+    <div class="screen" id="q4">
+      <div class="q-eyebrow">Step 4 of 6</div>
+      <div class="q-title">How would you describe <em>how you feel right now?</em></div>
+      <div class="q-sub">Select all that apply. This helps us understand your current state, not just your goals.</div>
+      <div class="opts" id="q4-opts">
+        <button class="opt multi" onclick="pickMulti(this,'feel','depleted')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Depleted and run down</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','fatigued')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Physically tired or fatigued</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','stressed')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Mentally stressed or overwhelmed</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','dehydrated')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Dehydrated or recovering</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','sluggish')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Sluggish or foggy mentally</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','lowimmune')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Immune system feels low</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','skinhealth')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Skin or hair health concerns</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','postworkout')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">Post-workout or physically demanding period</span></div>
+        </button>
+        <button class="opt multi" onclick="pickMulti(this,'feel','generally_ok')">
+          <div class="opt-square"></div>
+          <div class="opt-text"><span class="opt-main">I feel generally okay, this is proactive</span></div>
+        </button>
+      </div>
+      <button class="btn-next" id="q4-next" disabled onclick="goTo('q5','q4')">Continue</button>
+      <button class="btn-back" onclick="goTo('q3','q4')">← Back</button>
+    </div>
+
+    <!-- Q5: LIFESTYLE -->
+    <div class="screen" id="q5">
+      <div class="q-eyebrow">Step 5 of 6</div>
+      <div class="q-title">Which best describes <em>your lifestyle?</em></div>
+      <div class="opts">
+        <button class="opt" onclick="pickSingle(this,'lifestyle','highdemand')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">High-demand professional or parent</span>
+            <span class="opt-sub">Full schedule, high output, not much downtime.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'lifestyle','active')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Active and fitness-focused</span>
+            <span class="opt-sub">Regular training, sport or physical work.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'lifestyle','balanced')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Balanced and health-conscious</span>
+            <span class="opt-sub">I look after myself and want to maintain it.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'lifestyle','recovering')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Currently recovering or rebuilding</span>
+            <span class="opt-sub">Coming back from illness, travel, stress or a big period.</span>
+          </div>
+        </button>
+      </div>
+      <button class="btn-next" id="q5-next" disabled onclick="goTo('q6','q5')">Continue</button>
+      <button class="btn-back" onclick="goTo('q4','q5')">← Back</button>
+    </div>
+
+    <!-- Q6: NEW OR RETURNING -->
+    <div class="screen" id="q6">
+      <div class="q-eyebrow">Step 6 of 6</div>
+      <div class="q-title">Have you had <em>IV therapy before?</em></div>
+      <div class="opts">
+        <button class="opt" onclick="pickSingle(this,'experience','new')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">No, this is my first time</span>
+            <span class="opt-sub">I would love guidance on the best starting point.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'experience','some')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">I have had it once or twice</span>
+            <span class="opt-sub">I have some experience but want a recommendation.</span>
+          </div>
+        </button>
+        <button class="opt" onclick="pickSingle(this,'experience','regular')">
+          <div class="opt-dot"></div>
+          <div class="opt-text">
+            <span class="opt-main">Yes, I have it regularly</span>
+            <span class="opt-sub">I know what I am doing and want to explore options.</span>
+          </div>
+        </button>
+      </div>
+      <button class="btn-next" id="q6-next" disabled onclick="goTo('email','q6')">See my results</button>
+      <button class="btn-back" onclick="goTo('q5','q6')">← Back</button>
+    </div>
+
+    <!-- EMAIL CAPTURE -->
+    <div class="screen" id="email">
+      <div class="q-eyebrow">Almost there</div>
+      <div class="q-title">Where should we <em>send your results?</em></div>
+      <div class="q-sub">We will email you a personalised summary so you can refer back to it and share it with us when you book.</div>
+      <div class="email-wrap">
+        <input class="email-input" type="text" id="fname" placeholder="First name">
+        <input class="email-input" type="email" id="femail" placeholder="Email address">
+        <p class="email-note">Your information is only used to send your results and will never be shared. You can opt out at any time.</p>
+        <button class="btn-next" onclick="submitQuiz()">Send my results</button>
+        <button class="btn-next" style="background:transparent;color:var(--choc);border:1px solid var(--choc-faint);margin-top:-0.5rem;" onclick="goTo('result','email')">Skip, just show me</button>
+      </div>
+      <button class="btn-back" onclick="goTo('q6','email')">← Back</button>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div class="screen" id="result">
+      <div class="result-wrap" id="result-content"></div>
+      <div class="restart-wrap">
+        <button class="btn-restart" onclick="restart()">Start again</button>
+      </div>
+    </div>
+
+  </div><!-- end quiz-body -->
+</div><!-- end quiz-shell -->
+
+<script>
+// ─── STATE ───────────────────────────────────────────
+var answers = {sex:'',age:'',goal:'',feel:[],lifestyle:'',experience:''};
+
+// ─── PICKERS ─────────────────────────────────────────
+function pickSingle(el, key, val){
+  var parent = el.closest('.opts');
+  parent.querySelectorAll('.opt').forEach(function(b){b.classList.remove('selected');});
+  el.classList.add('selected');
+  answers[key] = val;
+  var nextBtn = document.getElementById(el.closest('.screen').id + '-next');
+  if(nextBtn) nextBtn.disabled = false;
+}
+
+function pickMulti(el, key, val){
+  el.classList.toggle('selected');
+  var arr = answers[key] || [];
+  if(!Array.isArray(arr)) arr = [];
+  if(el.classList.contains('selected')){
+    arr.push(val);
+  } else {
+    arr = arr.filter(function(v){return v !== val;});
+  }
+  answers[key] = arr;
+  var nextBtn = document.getElementById(el.closest('.screen').id + '-next');
+  if(nextBtn) nextBtn.disabled = arr.length === 0;
+}
+
+// ─── NAVIGATION ──────────────────────────────────────
+function goTo(to, from){
+  document.getElementById(from).classList.remove('active');
+  document.getElementById(to).classList.add('active');
+  document.getElementById('quiz-body').scrollTop = 0;
+  updateProgress(to);
+  updateLabel(to);
+}
+
+function updateProgress(screen){
+  var map = {q1:14,q2:28,q3:42,q4:57,q5:71,q6:85,email:95,result:100};
+  var pct = map[screen] || 0;
+  document.getElementById('prog').style.width = pct + '%';
+}
+
+function updateLabel(screen){
+  var map = {
+    q1:'Step 1 of 6',q2:'Step 2 of 6',q3:'Step 3 of 6',
+    q4:'Step 4 of 6',q5:'Step 5 of 6',q6:'Step 6 of 6',
+    email:'Almost there',result:'Your results'
+  };
+  document.getElementById('step-label').textContent = map[screen] || '';
+}
+
+function restart(){
+  answers = {sex:'',age:'',goal:'',feel:[],lifestyle:'',experience:''};
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('selected');});
+  document.querySelectorAll('.btn-next').forEach(function(b){b.disabled=true;});
+  document.getElementById('q1').classList.add('active');
+  document.getElementById('prog').style.width='0%';
+  document.getElementById('step-label').textContent='Find your treatment';
+  document.getElementById('quiz-body').scrollTop=0;
+}
+
+// ─── TREATMENT DATA ───────────────────────────────────
+var treatments = {
+  vitality:{
+    name:'Vitality and Energy',
+    tag:'Nutritional support for energy, vitality and everyday demands',
+    price:'$380',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28176721&share=true&pId=3024162',
+    designed:['Energy metabolism and everyday vitality','Mental and physical performance during demanding periods','Nutritional support when you feel depleted','Active and high-output lifestyles'],
+    boosters:[
+      {name:'B12 Vitality',price:'$55',desc:'A targeted B12 injection to layer alongside your infusion. Supports energy production, mental clarity and nervous system function.',note:'Recommended every 4 to 6 weeks.'},
+      {name:'CoQ10 Cellular Support',price:'$85',desc:'Supports mitochondrial energy production and antioxidant defence. A powerful companion for anyone navigating high-demand periods.',note:'Available as a 4-week package.'}
+    ]
+  },
+  calm:{
+    name:'Neuro Calm',
+    tag:'Restorative nutritional support for calm and nervous system wellbeing',
+    price:'$360',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28176736&share=true&pId=3024162',
+    designed:['Relaxation and calm','Nervous system restoration','Nutritional support during high-pressure periods','Those wanting restoration over performance'],
+    boosters:[
+      {name:'B12 Vitality',price:'$55',desc:'Prolonged stress depletes B12 rapidly. A targeted injection to restore some spark alongside your calming infusion.'},
+      {name:'Vitamin D3 Support',price:'$110',desc:'Low Vitamin D is closely linked to poor mood, anxiety and disrupted sleep. A natural companion for stress and sleep concerns.',note:'Recommended every 6 weeks.'}
+    ]
+  },
+  hydration:{
+    name:'Hydration and Replenishment',
+    tag:'Foundational hydration and fluid replenishment',
+    price:'$300',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28836281&share=true&pId=3024162',
+    designed:['Hydration and fluid balance','Nutritional replenishment after heat, travel or exertion','Recovery during demanding periods','General wellbeing as a starting point'],
+    boosters:[
+      {name:'B12 Vitality',price:'$55',desc:'Add targeted B12 support to your hydration session to address energy and mental clarity alongside replenishment.'},
+      {name:'Vitamin D3 Support',price:'$110',desc:'Restore optimal Vitamin D levels to support immunity, mood and bone health. Recommended every 6 weeks.',note:'Recommended every 6 weeks.'}
+    ]
+  },
+  immunity:{
+    name:'Immune Support',
+    tag:'Seasonal nutritional support for normal immune function',
+    price:'$360',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28836277&share=true&pId=3024162',
+    designed:['Normal immune function and antioxidant support','Replenishment during seasonal changes','Nutritional wellbeing during busy periods','Those wanting to maintain wellbeing year-round'],
+    boosters:[
+      {name:'Vitamin D3 Support',price:'$110',desc:'Clinically recognised as essential for immune regulation. Absolutely critical for immune function and a natural companion to Immune Support.',note:'Recommended every 6 weeks.'},
+      {name:'B12 Vitality',price:'$55',desc:'Illness and immune stress deplete B12 rapidly. A targeted injection to support energy and nervous system recovery.'}
+    ]
+  },
+  beauty:{
+    name:'Lumina Glow',
+    tag:'Beauty-focused nutritional support for skin, hair and nails',
+    price:'$360',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28176743&share=true&pId=3024162',
+    designed:['Skin health, appearance and antioxidant support','Hair and nail health from within','Nutritional support as part of a beauty routine','Preparing for an event or investing in your wellbeing'],
+    boosters:[
+      {name:'Antioxidant Support',price:'$100',desc:'A potent antioxidant injection to amplify skin radiance and support cellular repair. The perfect companion to Lumina Glow.',note:'Recommended weekly for sustained results.'},
+      {name:'Biotin Beauty',price:'$55',desc:'A Biotin injection to support hair, skin and nail health from within. Best results come with consistent use over time.',note:'Available as a 4-week Biotin Beauty Package.'}
+    ]
+  },
+  performance:{
+    name:'Performance and Recovery',
+    tag:'Nutritional support for active lifestyles, physical demands and recovery',
+    price:'$380',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28830738&share=true&pId=3024162',
+    designed:['Exercise and physical performance','Recovery following training or exertion','Nutritional replenishment for active adults','Regular gym-goers, athletes and physically demanding lifestyles'],
+    boosters:[
+      {name:'CoQ10 Cellular Support',price:'$85',desc:'Supports mitochondrial energy production and exercise recovery. Pairs powerfully with Performance and Recovery for anyone training consistently.',note:'Available as a 4-week package.'},
+      {name:'B12 Vitality',price:'$55',desc:'Layer targeted B12 support for sharper mental clarity and sustained energy output during training.'}
+    ]
+  },
+  restore:{
+    name:'Restore and Recover',
+    tag:'Restorative nutritional replenishment for demanding periods',
+    price:'$380',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28176748&share=true&pId=3024162',
+    designed:['Recovery and restoration after demanding periods','Nutritional replenishment and antioxidant support','General wellbeing and resilience rebuilding','Feeling depleted after illness, travel or life demands'],
+    boosters:[
+      {name:'B12 Vitality',price:'$55',desc:'A targeted B12 injection to restore energy and nervous system function alongside your recovery infusion.'},
+      {name:'Vitamin D3 Support',price:'$110',desc:'Vitamin D depletion is common during illness and stress. Restores optimal levels to support immunity, mood and energy.',note:'Recommended every 6 weeks.'}
+    ]
+  },
+  foundation:{
+    name:'Foundational Nutritional Support',
+    tag:'Broad vitamin and mineral support for everyday nutritional wellbeing',
+    price:'$350',
+    dur:'45 to 60 mins',
+    link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28176715&share=true&pId=3024162',
+    designed:['General nutritional wellbeing and energy metabolism','Everyday vitality for busy lifestyles','Broad nutritional support rather than goal-specific focus','Periods of increased nutritional demand'],
+    boosters:[
+      {name:'B12 Vitality',price:'$55',desc:'A foundational B12 injection to complement your broad nutritional support and address energy and clarity.'},
+      {name:'CoQ10 Cellular Support',price:'$85',desc:'Supports cellular energy production and antioxidant defence. A natural addition to any foundational nutritional protocol.',note:'Available as a 4-week package.'}
+    ]
+  }
+};
+
+// ─── ALGORITHM ────────────────────────────────────────
+function computeResult(){
+  var g = answers.goal;
+  var feel = answers.feel || [];
+  var sex = answers.sex;
+  var age = answers.age;
+  var lifestyle = answers.lifestyle;
+  var experience = answers.experience;
+
+  // Direct goal mapping
+  if(g==='energy') return 'vitality';
+  if(g==='calm') return 'calm';
+  if(g==='immunity') return 'immunity';
+  if(g==='beauty') return 'beauty';
+  if(g==='performance') return 'performance';
+  if(g==='cellular') return 'cellular';
+  if(g==='foundation') return 'foundation';
+
+  if(g==='hydration'){
+    // Dehydrated + active = restore
+    if(feel.includes('postworkout') || lifestyle==='active') return 'restore';
+    return 'hydration';
+  }
+
+  if(g==='hormonal'){
+    // Women in hormonal transition - use vitality as closest match
+    return 'vitality';
+  }
+
+  // Fallback from feel signals
+  if(feel.includes('postworkout') || lifestyle==='active') return 'performance';
+  if(feel.includes('stressed')) return 'calm';
+  if(feel.includes('dehydrated')) return 'hydration';
+  if(feel.includes('lowimmune')) return 'immunity';
+  if(feel.includes('skinhealth')) return 'beauty';
+  if(feel.includes('depleted') || feel.includes('fatigued')) return 'restore';
+  if(feel.includes('generally_ok')) return 'foundation';
+
+  return 'foundation';
+}
+
+function getPersonalisedWhy(key){
+  var g = answers.goal;
+  var sex = answers.sex;
+  var age = answers.age;
+  var feel = answers.feel || [];
+  var lifestyle = answers.lifestyle;
+  var experience = answers.experience;
+  var name = answers.fname || '';
+
+  var isFemale = sex==='female';
+  var isOlder = age==='45to60'||age==='over60';
+  var isNew = experience==='new';
+  var isActive = lifestyle==='active';
+  var isHighDemand = lifestyle==='highdemand';
+  var isRecovering = lifestyle==='recovering';
+
+  var whys = {
+    vitality: function(){
+      var w = 'Based on your answers, your body is signalling a need for targeted nutritional support around energy and vitality. ';
+      if(isHighDemand) w += 'High-output lifestyles place significant demand on B vitamins, magnesium and amino acid reserves — nutrients that deplete quickly under sustained pressure and are difficult to restore through diet alone. ';
+      if(isFemale && isOlder) w += 'For women in their forties and beyond, declining oestrogen levels directly affect mitochondrial function and energy metabolism, meaning fatigue often has a physiological root rather than a lifestyle one. ';
+      w += 'Vitality and Energy delivers targeted nutritional support directly into the bloodstream, bypassing digestion for near-complete absorption. The result is not a stimulant effect — it is real, cellular-level support for the systems that produce energy naturally.';
+      if(isNew) w += ' As a starting point for IV therapy, this is a well-tolerated and clinically sound choice.';
+      return w;
+    },
+    calm: function(){
+      var w = 'Your answers suggest your nervous system has been under sustained demand. ';
+      if(feel.includes('stressed')) w += 'Chronic stress elevates cortisol and depletes magnesium, B vitamins and GABA precursors at a rate that dietary intake alone struggles to restore. ';
+      if(isHighDemand) w += 'High-pressure environments maintain the nervous system in a low-grade alert state, which over time disrupts sleep, mood and cognitive function. ';
+      w += 'Neuro Calm is formulated to provide targeted nutritional support for nervous system wellbeing — supporting the pathways involved in calm, relaxation and restoration. Most clients notice a shift during the session itself.';
+      return w;
+    },
+    hydration: function(){
+      var w = 'Your answers point clearly to hydration as the priority. ';
+      if(feel.includes('dehydrated')) w += 'Cellular dehydration affects cognition, mood, physical performance and energy in ways that are often underestimated. IV fluid delivery restores hydration at a cellular level — something that oral hydration, particularly after significant fluid loss, cannot achieve as effectively. ';
+      w += 'Hydration and Replenishment provides a straightforward, well-tolerated approach to fluid and nutritional replenishment.';
+      if(isNew) w += ' It is also one of the most popular starting points for first-time clients.';
+      return w;
+    },
+    immunity: function(){
+      var w = 'Your answers suggest your immune system is calling for nutritional support. ';
+      if(feel.includes('lowimmune')) w += 'Immune function depends on a precise combination of micronutrients — Vitamin C, Zinc, Selenium and B vitamins — that are rapidly depleted during periods of immune activity, stress or inadequate sleep. ';
+      if(isOlder) w += 'Immune resilience naturally changes with age, and nutritional support becomes increasingly important for maintaining it through seasonal and lifestyle demands. ';
+      w += 'Immune Support delivers these nutrients at concentrations that oral supplementation cannot reliably achieve, providing the immune system with a direct nutritional input at the time it needs it most.';
+      return w;
+    },
+    beauty: function(){
+      var w = 'Your answers reflect a focus on investing in how you look and feel from within — which is where real skin and hair health begins. ';
+      if(isFemale) w += 'For women, collagen synthesis declines steadily from the mid-twenties, and the nutrients required to support it — particularly Vitamin C and Glycine — are among the most difficult to maintain at therapeutic levels through diet alone. ';
+      w += 'Lumina Glow delivers high-dose Vitamin C directly into the bloodstream at concentrations far beyond what oral supplements can achieve, alongside nutrients that support collagen health and antioxidant protection at a cellular level. The shift most clients describe is not dramatic — it is the kind where you notice your skin looks clearer, more even and genuinely more rested.';
+      return w;
+    },
+    performance: function(){
+      var w = 'Your answers identify an active, performance-oriented lifestyle where recovery and nutritional support are central to your results. ';
+      if(isActive) w += 'Regular training depletes magnesium, B vitamins and amino acids at a rate that dietary intake and oral supplementation often fail to keep pace with — particularly during intensive training blocks or competition preparation. ';
+      w += 'Performance and Recovery provides targeted nutritional replenishment to support exercise output, reduce recovery time and help you maintain consistency across your training.';
+      return w;
+    },
+    restore: function(){
+      var w = 'Your answers suggest your body is in a restorative phase — depleted after a period of significant physical or lifestyle demand. ';
+      if(feel.includes('depleted')) w += 'When the body is depleted, nutrient stores drop and the systems responsible for energy, immune function and cellular repair all operate below their optimal level. ';
+      if(isRecovering) w += 'Recovery is not passive — it requires the specific inputs your body has been running low on. ';
+      w += 'Restore and Recover delivers a targeted nutritional blend to support replenishment, antioxidant defence and general wellbeing, giving your body what it needs to actually recover rather than just rest.';
+      return w;
+    },
+    foundation: function(){
+      var w = 'Based on your answers, a broad, foundational approach to nutritional support is the right starting point. ';
+      if(feel.includes('generally_ok')) w += 'Proactive nutritional support is one of the most evidence-aligned approaches to maintaining long-term wellbeing — addressing gaps before they become deficits. ';
+      if(isOlder) w += 'Nutrient absorption decreases with age, meaning even a balanced diet may leave certain micronutrient levels lower than optimal. ';
+      w += 'Foundational Nutritional Support provides a comprehensive vitamin and mineral infusion that supports energy metabolism, everyday vitality and general nutritional wellbeing.';
+      if(isNew) w += ' It is also an excellent starting point for anyone new to IV therapy who wants to understand how their body responds before exploring more targeted options.';
+      return w;
+    }
+  };
+
+  return whys[key] ? whys[key]() : '';
+}
+
+// ─── BUILD RESULT HTML ────────────────────────────────
+function buildResult(key){
+  if(key==='cellular') return buildCellularResult();
+  if(key==='unsure') return buildUnsureResult();
+
+  var t = treatments[key];
+  if(!t) return buildUnsureResult();
+
+  var why = getPersonalisedWhy(key);
+  var name = answers.fname || '';
+  var isNew = answers.experience==='new';
+  var feeNote = isNew
+    ? 'New clients: a $49 clinical assessment fee applies and is added to your total on the day.'
+    : 'Returning clients with the same treatment: no assessment fee required.';
+
+  var boostersHtml = '';
+  if(t.boosters && t.boosters.length){
+    var bl = t.boosters.map(function(b){
+      return '<div class="booster">'
+        +'<div class="booster-name">'+b.name+' <span class="booster-price">'+b.price+'</span></div>'
+        +'<div class="booster-desc">'+b.desc+'</div>'
+        +(b.note?'<div class="booster-note">'+b.note+'</div>':'')
+        +'</div>';
+    }).join('');
+    boostersHtml = '<div class="boosters-section">'
+      +'<span class="boosters-label">Suggested add-on boosters — must be booked alongside a drip</span>'
+      +bl
+      +'<div class="booster-note" style="margin-top:0.75rem;">Boosters cannot be purchased as standalone services. They are available to add when booking a drip or package through Fresha.</div>'
+      +'</div>';
+  }
+
+  var designedHtml = '<ul>'+t.designed.map(function(d){return '<li>'+d+'</li>';}).join('')+'</ul>';
+
+  var pkgHtml = buildPackageHtml(key);
+
+  return '<div class="result-header">'
+    +'<span class="result-eyebrow">Your personalised recommendation</span>'
+    +'<div class="result-name">'+t.name+'</div>'
+    +'<div class="result-tag">'+t.tag+'</div>'
+    +'</div>'
+    +'<div class="result-body">'
+    +(name?'<p style="font-size:13px;font-weight:300;color:var(--choc-dim);margin-bottom:1rem;">Hi '+name+', here is what we recommend based on your answers.</p>':'')
+    +'<span class="result-why-label">Why this treatment</span>'
+    +'<p class="result-why">'+why+'</p>'
+    +'<div class="result-designed"><div class="result-designed-label">Designed to support</div>'+designedHtml+'</div>'
+    +'<div class="result-price-row"><div class="result-price">'+t.price+'</div><div class="result-dur">'+t.dur+'</div></div>'
+    +'<div class="fee-note">'+feeNote+'</div>'
+    +'<a class="result-btn" href="'+t.link+'" target="_blank">Book this treatment</a>'
+    +'<a class="result-btn secondary" href="https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28214284&share=true&pId=3024162" target="_blank">Book a free 15 min consult first</a>'
+    +'</div>'
+    +boostersHtml
+    +pkgHtml
+    +'<div class="disclaimer">These results are for guidance only and are not medical advice. All treatments are subject to individual clinical assessment and suitability. IV therapy is not appropriate for everyone. strIVe does not guarantee any particular health outcome.</div>';
+}
+
+function buildCellularResult(){
+  return '<div class="result-header">'
+    +'<span class="result-eyebrow">Your personalised recommendation</span>'
+    +'<div class="result-name">Cellular Therapy</div>'
+    +'<div class="result-tag">Advanced cellular support — administered following clinical assessment</div>'
+    +'</div>'
+    +'<div class="result-body">'
+    +'<span class="result-why-label">About cellular therapy</span>'
+    +'<p class="result-why">Your answers suggest an interest in advanced cellular support — one of the most sophisticated approaches to IV nutritional therapy currently available. Due to TGA advertising regulations, we are unable to list full treatment details online. We encourage you to contact us before booking so Sanjana can discuss your options, eligibility and what to expect in detail.</p>'
+    +'</div>'
+    +'<div class="cellular-section">'
+    +'<span class="cellular-label">Available cellular therapy options</span>'
+    +'<div class="cellular-title">Contact us to discuss suitability before booking.</div>'
+    +'<div class="cellular-desc">All cellular therapy sessions are administered following individual clinical assessment. Administered by a registered nurse under applicable clinical protocol.</div>'
+    +'<div class="cellular-options">'
+    +'<a class="cellular-opt" href="https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28838225&share=true&pId=3024162" target="_blank"><span class="cellular-opt-name">The Renewal Infusion</span><span class="cellular-opt-price">$285</span></a>'
+    +'<a class="cellular-opt" href="https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28838228&share=true&pId=3024162" target="_blank"><span class="cellular-opt-name">The Renewal Infusion+</span><span class="cellular-opt-price">$450</span></a>'
+    +'<a class="cellular-opt" href="https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28838230&share=true&pId=3024162" target="_blank"><span class="cellular-opt-name">The Longevity Infusion</span><span class="cellular-opt-price">$650</span></a>'
+    +'<a class="cellular-opt" href="https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28838239&share=true&pId=3024162" target="_blank"><span class="cellular-opt-name">The Longevity Infusion+</span><span class="cellular-opt-price">$800</span></a>'
+    +'</div></div>'
+    +'<a class="result-btn" href="https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28214284&share=true&pId=3024162" target="_blank" style="margin-top:1rem;display:block;">Book a free consult to discuss</a>'
+    +'<div class="disclaimer">These results are for guidance only and are not medical advice. All treatments are subject to individual clinical assessment. Due to TGA advertising regulations certain treatment details cannot be listed publicly.</div>';
+}
+
+function buildUnsureResult(){
+  return '<div class="unsure-card">'
+    +'<div class="result-eyebrow" style="font-size:9px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:var(--olive);display:block;margin-bottom:0.75rem;">Our recommendation</div>'
+    +'<div class="unsure-title">Start with a free consultation</div>'
+    +'<p class="unsure-text">Based on your answers, the best next step is a free 15-minute consultation with Sanjana. Every strIVe client is welcome to a no-pressure clinical conversation before committing to any treatment. She will review your health history, discuss your goals and confirm the right match for you.</p>'
+    +'<a class="result-btn" href="https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28214284&share=true&pId=3024162" target="_blank">Book your free consult</a>'
+    +'</div>'
+    +'<div class="disclaimer">These results are for guidance only and are not medical advice. All treatments are subject to individual clinical assessment and suitability.</div>';
+}
+
+function buildPackageHtml(key){
+  // Show relevant packages based on treatment
+  var pkgs = [];
+
+  if(key==='beauty'){
+    pkgs.push({
+      name:'Biotin Beauty Package',
+      desc:'The magic elixir for your hair, skin and nails. Four weekly Biotin injections for those wanting real, consistent results over time.',
+      link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=p%3A1900530&share=true&pId=3024162'
+    });
+  }
+  if(key==='vitality'||key==='performance'||key==='foundation'||key==='restore'){
+    pkgs.push({
+      name:'CoQ10 Support Package (4 Weeks)',
+      desc:'Four weekly CoQ10 injections to support cellular energy production and antioxidant defence over a consistent four week period.',
+      link:'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=p%3A1880838&share=true&pId=3024162'
+    });
+  }
+
+  if(!pkgs.length) return '';
+
+  var html = '<div class="pkg-section">'
+    +'<span class="pkg-label">Recommended packages</span>';
+  pkgs.forEach(function(p){
+    html += '<div class="pkg">'
+      +'<div class="pkg-name">'+p.name+'</div>'
+      +'<div class="pkg-desc">'+p.desc+'</div>'
+      +'<a class="pkg-btn" href="'+p.link+'" target="_blank">Book package</a>'
+      +'</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ─── SUBMIT ───────────────────────────────────────────
+function submitQuiz(){
+  var name = document.getElementById('fname').value.trim();
+  var email = document.getElementById('femail').value.trim();
+  answers.fname = name;
+
+  var key = computeResult();
+  showResult(key);
+
+  if(email){
+    var t = treatments[key];
+    var tname = t ? t.name : 'Consultation recommended';
+    var tlink = t ? t.link : 'https://www.fresha.com/book-now/strive-mobile-iv-therapy-ilf5qkgw/services?lid=3125558&eid=5447783&oiid=sv%3A28214284&share=true&pId=3024162';
+    var why = t ? getPersonalisedWhy(key) : 'We recommend starting with a free consultation.';
+    var designed = t ? t.designed.join(', ') : '';
+
+    var params = {
+      to_email: email,
+      to_name: name || 'there',
+      treatment_name: tname,
+      treatment_link: tlink,
+      why_text: why,
+      designed_for: designed,
+      price: t ? t.price : '',
+      sex: answers.sex,
+      age: answers.age,
+      goal: answers.goal,
+      feel: (answers.feel||[]).join(', '),
+      lifestyle: answers.lifestyle,
+      experience: answers.experience
+    };
+
+    emailjs.send('service_cy07419','template_39e9nlf', params).catch(function(e){console.log('Email error',e);});
+
+    // Also send to strIVe
+    var staffParams = Object.assign({}, params, {to_email:'contact@striveiv.com.au', to_name:'Sanjana'});
+    emailjs.send('service_cy07419','template_39e9nlf', staffParams).catch(function(e){console.log('Staff email error',e);});
+  }
+
+  // GA4 event
+  gtag('event','quiz_completed',{treatment:key,goal:answers.goal,sex:answers.sex,age:answers.age});
+}
+
+function showResult(key){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('result').classList.add('active');
+  document.getElementById('result-content').innerHTML = buildResult(key);
+  document.getElementById('quiz-body').scrollTop = 0;
+  updateProgress('result');
+  updateLabel('result');
+}
+</script>
+</body>
+</html>
